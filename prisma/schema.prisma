@@ -19,11 +19,23 @@ model User {
   email String @unique
   phone String
 
-  transactions Transaction[] @relation("CreatedTransactions")
+  transactions Transaction[] @relation("OwnerTransaction")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// model Team {
+//   id          String  @id @default(cuid())
+//   name        String
+//   description String?
+
+//   manager   User   @relation("OwnerTeam", fields: [managerId], references: [id], onDelete: Cascade)
+//   managerId String
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
 
 model Transaction {
   id          String @id @default(cuid())
@@ -32,7 +44,7 @@ model Transaction {
   type        String
   amount      Int
 
-  createdBy   User   @relation("CreatedTransactions", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User   @relation("OwnerTransaction", fields: [createdById], references: [id], onDelete: Cascade)
   createdById String
 
   createdAt DateTime @default(now())
