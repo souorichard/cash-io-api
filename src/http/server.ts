@@ -9,6 +9,7 @@ import { deleteTransaction } from './routes/transaction/delete-transaction'
 import { updateUser } from './routes/user/update-user'
 import { deleteUser } from './routes/user/delete-user'
 import { getExpenseTransactions } from './routes/analytics/get-expense-transactions'
+import { getRevenueTransactions } from './routes/analytics/get-revenue-transactions'
 
 const app = fastify()
 
@@ -22,6 +23,7 @@ app.register(addTransaction)
 app.register(updateTransaction)
 app.register(deleteTransaction)
 app.register(getExpenseTransactions)
+app.register(getRevenueTransactions)
 
 app.listen({
   port: 3333
