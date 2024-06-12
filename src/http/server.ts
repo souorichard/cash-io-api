@@ -6,6 +6,7 @@ import { getTransactions } from './routes/transaction/get-transactions'
 import { addTransaction } from './routes/transaction/add-transaction'
 import { updateTransaction } from './routes/transaction/update-transaction'
 import { deleteTransaction } from './routes/transaction/delete-transaction'
+import { getProfile } from './routes/user/get-profile'
 import { updateUser } from './routes/user/update-user'
 import { deleteUser } from './routes/user/delete-user'
 import { getExpenseTransactions } from './routes/analytics/get-expense-transactions'
@@ -17,6 +18,7 @@ const app = fastify()
 app.register(cors, { origin: true })
 app.register(signUp)
 app.register(signIn)
+app.register(getProfile)
 app.register(updateUser)
 app.register(deleteUser)
 app.register(getTransactions)

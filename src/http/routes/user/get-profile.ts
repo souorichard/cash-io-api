@@ -3,7 +3,7 @@ import { isAuthenticated } from '../../authentication'
 import { db } from '../../../lib/db'
 import { decodeToken } from '../../../utils/decode-token'
 
-export async function getUser(app: FastifyInstance) {
+export async function getProfile(app: FastifyInstance) {
   app.get('/users/me', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
