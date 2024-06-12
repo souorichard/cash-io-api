@@ -19,10 +19,6 @@ export async function getExpenseTransactions(app: FastifyInstance) {
         }
       })
 
-      if (!transactions) {
-        return reply.status(404).send({ message: 'Transactions not found.' })
-      }
-
       let expenseTransactions = 0
 
       for (let i = 0; i < transactions.length; i++) {

@@ -12,7 +12,7 @@ export async function getUser(app: FastifyInstance) {
     try {
       const { id } = await decodeToken(request, reply)
 
-      const user = await db.transaction.findUnique({
+      const user = await db.user.findUnique({
         where: {
           id
         }

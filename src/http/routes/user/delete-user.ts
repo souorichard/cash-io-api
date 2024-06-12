@@ -22,7 +22,7 @@ export async function deleteUser(app: FastifyInstance) {
         return reply.status(404).send({ message: 'User not found.' })
       }
 
-      await db.transaction.delete({
+      await db.user.delete({
         where: {
           id
         }

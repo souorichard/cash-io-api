@@ -14,7 +14,7 @@ export async function getTransactions(app: FastifyInstance) {
 
       const transactions = await db.transaction.findMany({
         where: {
-          id
+          createdById: id
         },
         orderBy: {
           createdAt: 'desc'
