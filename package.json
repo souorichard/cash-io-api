@@ -17,6 +17,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@fastify/cors": "^9.0.1",
     "@prisma/client": "^5.14.0",
     "@types/jsonwebtoken": "^9.0.6",
     "fastify": "^4.27.0",

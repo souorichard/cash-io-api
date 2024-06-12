@@ -1,4 +1,5 @@
 import fastify from 'fastify'
+import cors from '@fastify/cors'
 import { signUp } from './routes/auth/sign-up'
 import { signIn } from './routes/auth/sign-in'
 import { getTransactions } from './routes/transaction/get-transactions'
@@ -10,6 +11,7 @@ import { deleteUser } from './routes/user/delete-user'
 
 const app = fastify()
 
+app.register(cors, { origin: true })
 app.register(signUp)
 app.register(signIn)
 app.register(getTransactions)

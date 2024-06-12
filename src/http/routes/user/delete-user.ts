@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
-import { db } from '../../../db'
+import { db } from '../../../lib/db'
 import { decodeToken } from '../../../utils/decode-token'
 
 export async function deleteUser(app: FastifyInstance) {

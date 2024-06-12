@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { db } from '../../../db'
+import { db } from '../../../lib/db'
 import { z } from 'zod'
 
 const signUpSchema = z.object({

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { isAuthenticated, verifyToken } from '../../authentication'
-import { db } from '../../../db'
+import { db } from '../../../lib/db'
 import { z } from 'zod'
 import { decodeToken } from '../../../utils/decode-token'
 

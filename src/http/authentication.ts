@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
-import { db } from '../db'
+import { db } from '../lib/db'
 
 const tokenSchema = z.object({
   id: z.string(),
