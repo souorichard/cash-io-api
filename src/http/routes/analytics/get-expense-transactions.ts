@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
-import { db } from '../../../lib/db'
 import { decodeToken } from '../../../utils/decode-token'
+import { expenseTransactions } from '../../../utils/expense-transactions'
 
 export async function getExpenseTransactions(app: FastifyInstance) {
   app.get('/transactions/expense', {
@@ -12,20 +12,9 @@ export async function getExpenseTransactions(app: FastifyInstance) {
     try {
       const { id } = await decodeToken(request, reply)
 
-      const transactions = await db.transaction.findMany({
-        where: {
-          createdById: id,
-          type: 'EXPENSE'
-        }
-      })
+      const transactions = await expenseTransactions(id)
 
-      let expenseTransactions = 0
-
-      for (let i = 0; i < transactions.length; i++) {
-        expenseTransactions += transactions[i].amount  
-      }
-
-      return reply.status(200).send(expenseTransactions)
+      return reply.status(200).send(transactions)
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'
