@@ -20,6 +20,7 @@
     "@fastify/cors": "^9.0.1",
     "@prisma/client": "^5.14.0",
     "@types/jsonwebtoken": "^9.0.6",
+    "dayjs": "^1.11.11",
     "fastify": "^4.27.0",
     "zod": "^3.23.8"
   }
