@@ -13,6 +13,7 @@ import { getExpenseTransactions } from './routes/analytics/get-expense-transacti
 import { getRevenueTransactions } from './routes/analytics/get-revenue-transactions'
 import { getTotalBalance } from './routes/analytics/get-total-balance'
 import { getDailyTransactionsInPeriod } from './routes/analytics/get-daily-transactions-in-period'
+import { getRecentTransactionOwners } from './routes/analytics/get-recent-transaction-owners'
 
 const app = fastify()
 
@@ -30,6 +31,7 @@ app.register(getExpenseTransactions)
 app.register(getRevenueTransactions)
 app.register(getTotalBalance)
 app.register(getDailyTransactionsInPeriod)
+app.register(getRecentTransactionOwners)
 
 app.listen({
   port: 3333
