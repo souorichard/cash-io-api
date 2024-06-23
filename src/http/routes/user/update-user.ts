@@ -9,6 +9,7 @@ const updateUserSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   phone: z.string(),
+  teamName: z.string(),
 })
 
 export async function updateUser(app: FastifyInstance) {
@@ -18,7 +19,7 @@ export async function updateUser(app: FastifyInstance) {
     }
   }, async (request, reply) => {
     try {
-      const { name, email, phone } = updateUserSchema.parse(request.body)
+      const { name, email, phone, teamName } = updateUserSchema.parse(request.body)
 
       const { id } = await decodeToken(request, reply)
 
@@ -39,7 +40,8 @@ export async function updateUser(app: FastifyInstance) {
         data: {
           name,
           email,
-          phone
+          phone,
+          teamName
         }
       })
 

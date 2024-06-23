@@ -19,6 +19,8 @@ model User {
   email String @unique
   phone String
 
+  teamName String @default("Pessoal")
+
   transactions Transaction[] @relation("OwnerTransaction")
 
   createdAt DateTime @default(now())
