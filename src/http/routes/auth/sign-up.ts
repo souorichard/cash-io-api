@@ -27,7 +27,7 @@ export async function signUp(app: FastifyInstance) {
           }
         })
 
-        return reply.status(201).send({ userEmail: newUser.email })
+        return reply.status(201).send({ message: "User registered successfully." })
       }
 
       return reply.status(409).send({
