@@ -1,18 +1,20 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../../../lib/db'
 import { z } from 'zod'
+import { hashPassword } from '../../../utils/hashPassword'
 
 const signUpSchema = z.object({
   id: z.string().cuid().optional(),
   name: z.string(),
   email: z.string().email(),
+  password: z.string().min(8),
   phone: z.string()
 })
 
 export async function signUp(app: FastifyInstance) {
   app.post('/sign-up', async (request, reply) => {
     try {
-      const { name, email, phone } = signUpSchema.parse(request.body)
+      const { name, email, password, phone } = signUpSchema.parse(request.body)
 
       const userExist = await db.user.findUnique({
         where: {
@@ -21,9 +23,11 @@ export async function signUp(app: FastifyInstance) {
       })
 
       if (!userExist) {
-        const newUser = await db.user.create({
+        const hashedPassword = hashPassword(password)
+
+        await db.user.create({
           data: {
-            name, email, phone
+            name, email, password: hashedPassword, phone
           }
         })
 
