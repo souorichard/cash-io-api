@@ -1,4 +1,5 @@
 import fastify from 'fastify'
+import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import { signUp } from './routes/auth/sign-up'
 import { signIn } from './routes/auth/sign-in'
@@ -17,7 +18,10 @@ import { getRecentTransactionOwners } from './routes/analytics/get-recent-transa
 
 const app = fastify()
 
-app.register(cors, { origin: true })
+app.register(cors, {
+  origin: process.env.CORS_ORIGIN,
+  methods: 'GET, POST, PUT, DELETE, OPTIONS'
+})
 app.register(signUp)
 app.register(signIn)
 app.register(getProfile)
