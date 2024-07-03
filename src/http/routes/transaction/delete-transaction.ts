@@ -9,13 +9,13 @@ const deleteTransactionSchema = z.object({
 })
 
 export async function deleteTransaction(app: FastifyInstance) {
-  app.delete('/transactions', {
+  app.delete('/transactions/:id', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }
   }, async (request, reply) => {
     try {
-      const { id } = deleteTransactionSchema.parse(request.body)
+      const { id } = deleteTransactionSchema.parse(request.params)
 
       const { id: userId } = await decodeToken(request, reply)
 
