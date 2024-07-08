@@ -9,17 +9,16 @@ const updateUserSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   phone: z.string(),
-  teamName: z.string(),
 })
 
 export async function updateUser(app: FastifyInstance) {
-  app.put('/users', {
+  app.put('/profile', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }
   }, async (request, reply) => {
     try {
-      const { name, email, phone, teamName } = updateUserSchema.parse(request.body)
+      const { name, email, phone } = updateUserSchema.parse(request.body)
 
       const { id } = await decodeToken(request, reply)
 
@@ -40,12 +39,11 @@ export async function updateUser(app: FastifyInstance) {
         data: {
           name,
           email,
-          phone,
-          teamName
+          phone
         }
       })
 
-      return reply.status(200).send({ message: 'User sucessfully updated.' })
+      return reply.status(200).send({ message: 'User successfully updated.' })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

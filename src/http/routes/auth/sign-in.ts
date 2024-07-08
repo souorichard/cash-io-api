@@ -14,19 +14,26 @@ export async function signIn(app: FastifyInstance) {
     try {
       const { email, password } = signInSchema.parse(request.body)
 
-      const userExist = await db.user.findUnique({
+      const existUser = await db.user.findUnique({
+        include: {
+          team: true
+        },
         where: {
           email
         }
       })
 
-      if (userExist) {
-        const { id, email, password: hashedPassword } = userExist
+      if (existUser) {
+        const { id, email, password: hashedPassword, team } = existUser
 
         if (bcrypt.compareSync(password, hashedPassword)) {
           const token = generateToken({ id ,email })
 
-          return reply.status(200).send({ id, token })
+          return reply.status(200).send({
+            userId: id,
+            teamId: team?.id,
+            token
+          })
         }
 
         return reply.status(400).send({

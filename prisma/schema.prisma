@@ -20,35 +20,39 @@ model User {
   password String
   phone    String
 
-  teamName String @default("Pessoal")
-
+  team         Team?         @relation("OwnerTeam")
   transactions Transaction[] @relation("OwnerTransaction")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// model Team {
-//   id          String  @id @default(cuid())
-//   name        String
-//   description String?
+model Team {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
 
-//   manager   User   @relation("OwnerTeam", fields: [managerId], references: [id], onDelete: Cascade)
-//   managerId String
+  manager   User   @relation("OwnerTeam", fields: [managerId], references: [id], onDelete: Cascade)
+  managerId String @unique
 
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+  transactions Transaction[] @relation("TeamTransactions")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 model Transaction {
-  id          String @id @default(cuid())
-  description String
-  category    String
-  type        String
-  amount      Int
+  id            String @id @default(cuid())
+  description   String
+  category      String
+  type          String
+  amountInCents Int
 
   createdBy   User   @relation("OwnerTransaction", fields: [createdById], references: [id], onDelete: Cascade)
   createdById String
+
+  team   Team   @relation("TeamTransactions", fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

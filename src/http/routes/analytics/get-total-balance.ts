@@ -5,20 +5,20 @@ import { expenseTransactions } from '../../../utils/expense-transactions'
 import { revenueTransactions } from '../../../utils/revenue-transactions'
 
 export async function getTotalBalance(app: FastifyInstance) {
-  app.get('/transactions/total-balance', {
+  app.get('/analytics/total', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }
   }, async (request, reply) => {
     try {
-      const { id } = await decodeToken(request, reply)
+      const { id, team } = await decodeToken(request, reply)
 
-      const expense = await expenseTransactions(id)
-      const revenue = await revenueTransactions(id)
+      const { transactions: expense } = await expenseTransactions(id, team!.id)
+      const { transactions: revenue } = await revenueTransactions(id, team!.id)
 
-      const totalBalance = revenue - expense
-
-      return reply.status(200).send(totalBalance)
+      return reply.status(200).send({
+        totalBalanceInCents: revenue - expense
+      })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

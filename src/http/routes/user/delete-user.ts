@@ -4,7 +4,7 @@ import { db } from '../../../lib/db'
 import { decodeToken } from '../../../utils/decode-token'
 
 export async function deleteUser(app: FastifyInstance) {
-  app.delete('/users', {
+  app.delete('/profile', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }
@@ -28,7 +28,7 @@ export async function deleteUser(app: FastifyInstance) {
         }
       })
 
-      return reply.status(200).send({ message: 'User sucessfully deleted.' })
+      return reply.status(200).send({ message: 'User successfully deleted.' })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

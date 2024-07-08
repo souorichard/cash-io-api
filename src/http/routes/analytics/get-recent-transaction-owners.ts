@@ -4,7 +4,7 @@ import { decodeToken } from '../../../utils/decode-token'
 import { db } from '../../../lib/db'
 
 export async function getRecentTransactionOwners(app: FastifyInstance) {
-  app.get('/transactions/recent', {
+  app.get('/analytics/recent', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }
@@ -31,7 +31,7 @@ export async function getRecentTransactionOwners(app: FastifyInstance) {
 
       const recentTransactions = transactions.slice(0, 6)
 
-      return reply.status(200).send(recentTransactions)
+      return reply.status(200).send({ transactions: recentTransactions })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

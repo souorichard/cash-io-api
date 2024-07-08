@@ -25,9 +25,16 @@ export async function signUp(app: FastifyInstance) {
       if (!userExist) {
         const hashedPassword = hashPassword(password)
 
-        await db.user.create({
+        const newUser = await db.user.create({
           data: {
             name, email, password: hashedPassword, phone
+          }
+        })
+
+        await db.team.create({
+          data: {
+            name: `Equipe do ${newUser.name.split(' ')[0]}`,
+            managerId: newUser.id
           }
         })
 

@@ -11,7 +11,7 @@ const periodParamsSchema = z.object({
 })
 
 export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
-  app.get('/transactions/period', {
+  app.get('/analytics/period', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }
@@ -19,7 +19,7 @@ export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
     try {
       const { from, to } = periodParamsSchema.parse(request.query)
 
-      const { id } = await decodeToken(request, reply)
+      const { id, team } = await decodeToken(request, reply)
 
       const startDate = from ? dayjs(from) : dayjs().subtract(7, 'd')
       const endDate = to ? dayjs(to) : from ? startDate.add(7, 'd') : dayjs()
@@ -28,24 +28,57 @@ export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
         return reply.status(400).send({ message: 'Invalid Period' })
       }
 
-      const transactionsPerDay = await db.transaction.findMany({
+      const transactions = await db.transaction.findMany({
         select: {
-          amount: true,
+          amountInCents: true,
           createdAt: true
         },
         where: {
-          createdById: id,
           createdAt: {
-            gte: startDate.startOf('day').add(startDate.utcOffset(), 'minutes').toDate(),
-            lte: endDate.endOf('day').add(endDate.utcOffset(), 'minutes').toDate()
+            gte: startDate.startOf('day').toDate(),
+            lte: endDate.endOf('day').toDate()
           },
+          createdById: id,
+          teamId: team!.id,
         },
         orderBy: {
           createdAt: 'asc'
         }
       })
 
-      return reply.status(200).send(transactionsPerDay)
+      const transactionsPerDay = transactions.reduce((acc, transactions) => {
+        const date = dayjs(transactions.createdAt).format('DD/MM')
+        if (!acc[date]) {
+          acc[date] = 0
+        }
+        acc[date] += transactions.amountInCents;
+        return acc
+      }, {} as Record<string, number>)
+
+      const filteredTransactions = Object.entries(transactionsPerDay)
+        .filter(([, amountInCents]) => amountInCents >= 1)
+        .map(([date, amountInCents]) => ({
+          date,
+          amountInCents,
+        }))
+
+      const orderedTransactionsPerDay = filteredTransactions.sort((a, b) => {
+        const [dayA, monthA] = a.date.split('/').map(Number)
+        const [dayB, monthB] = b.date.split('/').map(Number)
+    
+        if (monthA === monthB) {
+          return dayA - dayB
+        } else {
+          const currentYear = new Date().getFullYear()
+
+          const dateA = new Date(currentYear, monthA - 1)
+          const dateB = new Date(currentYear, monthB - 1)
+    
+          return dateA.getTime() - dateB.getTime();
+        }
+      })
+
+      return reply.status(200).send(orderedTransactionsPerDay)
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

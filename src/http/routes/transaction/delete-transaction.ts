@@ -17,12 +17,13 @@ export async function deleteTransaction(app: FastifyInstance) {
     try {
       const { id } = deleteTransactionSchema.parse(request.params)
 
-      const { id: userId } = await decodeToken(request, reply)
+      const { id: userId, team } = await decodeToken(request, reply)
 
       const verifyTransaction = await db.transaction.findUnique({
         where: {
           id,
-          createdById: userId
+          createdById: userId,
+          teamId: team!.id
         }
       })
 
@@ -33,11 +34,12 @@ export async function deleteTransaction(app: FastifyInstance) {
       await db.transaction.delete({
         where: {
           id,
-          createdById: userId
+          createdById: userId,
+          teamId: team!.id
         }
       })
 
-      return reply.status(200).send({ message: 'Transaction sucessfully deleted.' })
+      return reply.status(200).send({ message: 'Transaction successfully deleted.' })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

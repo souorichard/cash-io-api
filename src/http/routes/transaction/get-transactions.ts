@@ -9,6 +9,7 @@ const filterQuerySchema = z.object({
   category: z.string().optional(),
   page: z.string().optional(),
   limit: z.string().optional(),
+  sortDate: z.string().optional(),
 })
 
 export async function getTransactions(app: FastifyInstance) {
@@ -18,23 +19,32 @@ export async function getTransactions(app: FastifyInstance) {
     }
   }, async (request, reply) => {
     try {
-      const { id } = await decodeToken(request, reply)
+      const { id, team } = await decodeToken(request, reply)
 
-      const { description, category, page = 0, limit = 10 } = filterQuerySchema.parse(request.query)
+      const { description, category, page, limit, sortDate } = filterQuerySchema.parse(request.query)
 
       const transactions = await db.transaction.findMany({
+        select: {
+          id: true,
+          description: true,
+          category: true,
+          amountInCents: true,
+          type: true,
+          createdAt: true,
+        },
         where: {
           description: {
             contains: description,
             mode: 'insensitive',
           },
           category,
-          createdById: id
+          createdById: id,
+          teamId: team!.id,
         },
-        skip: Number(page),
-        take: Number(limit),
+        skip: page ? Number(page) * 10 : 0,
+        take: limit ? Number(limit) : 10,
         orderBy: {
-          createdAt: 'desc'
+          createdAt: sortDate === 'asc' ? 'asc' : 'desc'
         }
       })
 
@@ -48,8 +58,8 @@ export async function getTransactions(app: FastifyInstance) {
         transactions,
         meta: {
           total: totalTransactions,
-          page: Number(page),
-          perPage: Number(limit)
+          page: page ? Number(page) : 0,
+          perPage: limit ? Number(limit) : 10
         }
       })
     } catch (err) {

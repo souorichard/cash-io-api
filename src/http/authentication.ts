@@ -18,6 +18,9 @@ export async function verifyToken(token: string) {
   const { email } = tokenSchema.parse(jwt.verify(token, String(process.env.JWT_SECRET)))
 
   const user = await db.user.findUnique({
+    include: {
+      team: true
+    },
     where: {
       email
     }

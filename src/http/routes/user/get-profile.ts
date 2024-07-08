@@ -4,7 +4,7 @@ import { db } from '../../../lib/db'
 import { decodeToken } from '../../../utils/decode-token'
 
 export async function getProfile(app: FastifyInstance) {
-  app.get('/users/me', {
+  app.get('/me', {
     preHandler: (request, reply, done) => {
       isAuthenticated({ request, reply, done })
     }

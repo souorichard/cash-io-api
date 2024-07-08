@@ -21,19 +21,20 @@ export async function addTransaction(app: FastifyInstance) {
     try {
       const { description, category, amount, type } = addTransactionSchema.parse(request.body)
 
-      const { id } = await decodeToken(request, reply)
+      const { id, team } = await decodeToken(request, reply)
 
       await db.transaction.create({
         data: {
           description,
           category,
-          amount,
+          amountInCents: amount,
           type,
-          createdById: id
+          createdById: id,
+          teamId: team!.id
         }
       })
 
-      return reply.status(201).send({ message: 'Transaction sucessfully created.' })
+      return reply.status(201).send({ message: 'Transaction successfully created.' })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'

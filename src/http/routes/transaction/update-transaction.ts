@@ -21,12 +21,13 @@ export async function updateTransaction(app: FastifyInstance) {
     try {
       const { id, description, category, amount, type } = updateTransactionSchema.parse(request.body)
 
-      const { id: userId } = await decodeToken(request, reply)
+      const { id: userId, team } = await decodeToken(request, reply)
 
       const verifyTransaction = await db.transaction.findUnique({
         where: {
           id,
-          createdById: userId
+          createdById: userId,
+          teamId: team!.id
         }
       })
 
@@ -37,17 +38,18 @@ export async function updateTransaction(app: FastifyInstance) {
       await db.transaction.update({
         where: {
           id,
-          createdById: userId
+          createdById: userId,
+          teamId: team!.id
         },
         data: {
           description,
           category,
-          amount,
+          amountInCents: amount,
           type,
         }
       })
 
-      return reply.status(200).send({ message: 'Transaction sucessfully updated.' })
+      return reply.status(200).send({ message: 'Transaction successfully updated.' })
     } catch (err) {
       return reply.status(500).send({
         message: 'Internal server error.'
