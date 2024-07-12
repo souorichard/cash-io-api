@@ -38,7 +38,8 @@ export async function signUp(app: FastifyInstance) {
               name,
               email,
               password: hashPassword,
-              is_owner: true
+              is_owner: true,
+              is_confirmed: true
             }
           }
         }

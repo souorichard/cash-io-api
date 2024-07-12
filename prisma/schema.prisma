@@ -14,11 +14,12 @@ datasource db {
 }
 
 model Member {
-  id       String  @id @default(cuid())
-  name     String?
-  email    String  @unique
-  password String
-  is_owner Boolean @default(false)
+  id           String  @id @default(cuid())
+  name         String?
+  email        String  @unique
+  password     String
+  is_owner     Boolean @default(false)
+  is_confirmed Boolean @default(false)
 
   team    Team   @relation("MembersTeam", fields: [team_id], references: [id])
   team_id String

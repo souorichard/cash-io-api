@@ -21,11 +21,13 @@ import { getRecentTransactionOwners } from './routes/analytics/get-recent-transa
 import { getTeam } from './routes/team/get-team'
 import { updateTeam } from './routes/team/update-team'
 import { deleteTeam } from './routes/team/delete-team'
+import { inviteTeam } from './routes/team/invite-team'
+import { confirmMember } from './routes/member/confirm-member'
 
 const app = fastify()
 
 app.register(cors, {
-  origin: process.env.CORS_ORIGIN,
+  origin: process.env.WEB_BASE_URL,
   methods: 'GET, POST, PUT, DELETE, OPTIONS'
 })
 app.setValidatorCompiler(validatorCompiler)
@@ -48,6 +50,8 @@ app.register(getRecentTransactionOwners)
 app.register(getTeam)
 app.register(updateTeam)
 app.register(deleteTeam)
+app.register(inviteTeam)
+app.register(confirmMember)
 
 app.listen({
   port: 3333
