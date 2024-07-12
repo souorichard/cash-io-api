@@ -1,27 +1,41 @@
 import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
-import { decodeToken } from '../../../utils/decode-token'
+import { db } from '../../../lib/db'
+import { z } from 'zod'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { ClientError } from '../../errors/client-error'
 import { revenueTransactions } from '../../../utils/revenue-transactions'
 
 export async function getRevenueTransactions(app: FastifyInstance) {
-  app.get('/analytics/revenue', {
-    preHandler: (request, reply, done) => {
-      isAuthenticated({ request, reply, done })
-    }
-  }, async (request, reply) => {
-    try {
-      const { id, team } = await decodeToken(request, reply)
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/team/:teamId/transactions/revenue',
+    {
+      schema: {
+        params: z.object({
+          teamId: z.string().cuid()
+        }),
+      },
+      preHandler: (request, reply, done) => {
+        isAuthenticated({ request, reply, done })
+      }
+    },
+    async (request) => {
+      const { teamId } = request.params
 
-      const { transactions, diffFromLastMonth } = await revenueTransactions(id, team!.id)
+      const team = await db.team.findUnique({
+        where: {
+          id: teamId
+        }
+      })
 
-      return reply.status(200).send({
-        revenueAmountInCents: transactions,
+      if (!team) throw new ClientError('Team not found.')
+
+      const { transactions, diffFromLastMonth } = await revenueTransactions(teamId)
+
+      return {
+        transactions,
         diffFromLastMonth
-      })
-    } catch (err) {
-      return reply.status(500).send({
-        message: 'Internal server error.'
-      })
+      }
     }
-  })
+  )
 }

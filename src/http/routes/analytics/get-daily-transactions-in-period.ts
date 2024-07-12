@@ -1,57 +1,74 @@
 import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
-import { decodeToken } from '../../../utils/decode-token'
 import { db } from '../../../lib/db'
 import { z } from 'zod'
+import { decodeToken } from '../../../utils/decode-token'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { ClientError } from '../../errors/client-error'
 import dayjs from 'dayjs'
 
-const periodParamsSchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
-})
-
 export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
-  app.get('/analytics/period', {
-    preHandler: (request, reply, done) => {
-      isAuthenticated({ request, reply, done })
-    }
-  }, async (request, reply) => {
-    try {
-      const { from, to } = periodParamsSchema.parse(request.query)
+  app.withTypeProvider<ZodTypeProvider>().get(
+    '/team/:teamId/transactions/period',
+    {
+      schema: {
+        params: z.object({
+          teamId: z.string().cuid()
+        }),
+        querystring: z.object({
+          from: z.string().optional(),
+          to: z.string().optional(),
+        })
+      },
+      preHandler: (request, reply, done) => {
+        isAuthenticated({ request, reply, done })
+      }
+    },
+    async (request, reply) => {
+      const { teamId } = request.params
+      const { from, to } = request.query
 
-      const { id, team } = await decodeToken(request, reply)
+      const { id } = await decodeToken(request, reply)
+
+      const team = await db.team.findUnique({
+        where: {
+          id: teamId
+        }
+      })
+
+      if (!team) throw new ClientError('Team not found.')
 
       const startDate = from ? dayjs(from) : dayjs().subtract(7, 'd')
       const endDate = to ? dayjs(to) : from ? startDate.add(7, 'd') : dayjs()
 
       if (endDate.diff(startDate, 'days') > 7) {
-        return reply.status(400).send({ message: 'Invalid Period' })
+        throw new ClientError('Invalid Period')
       }
 
       const transactions = await db.transaction.findMany({
         select: {
-          amountInCents: true,
-          createdAt: true
+          amount_in_cents: true,
+          created_at: true
         },
         where: {
-          createdAt: {
+          created_at: {
             gte: startDate.startOf('day').toDate(),
             lte: endDate.endOf('day').toDate()
           },
-          createdById: id,
-          teamId: team!.id,
+          created_by_id: id,
+          team_id: teamId,
         },
         orderBy: {
-          createdAt: 'asc'
+          created_at: 'asc'
         }
       })
 
       const transactionsPerDay = transactions.reduce((acc, transactions) => {
-        const date = dayjs(transactions.createdAt).format('DD/MM')
+        const date = dayjs(transactions.created_at).format('DD/MM')
         if (!acc[date]) {
           acc[date] = 0
         }
-        acc[date] += transactions.amountInCents;
+        acc[date] += transactions.amount_in_cents
         return acc
       }, {} as Record<string, number>)
 
@@ -74,15 +91,11 @@ export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
           const dateA = new Date(currentYear, monthA - 1)
           const dateB = new Date(currentYear, monthB - 1)
     
-          return dateA.getTime() - dateB.getTime();
+          return dateA.getTime() - dateB.getTime()
         }
       })
 
-      return reply.status(200).send(orderedTransactionsPerDay)
-    } catch (err) {
-      return reply.status(500).send({
-        message: 'Internal server error.'
-      })
+      return orderedTransactionsPerDay
     }
-  })
+  )
 }

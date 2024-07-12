@@ -1,19 +1,18 @@
 import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
 import { db } from '../../../lib/db'
-import { z } from 'zod'
-import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { ClientError } from '../../errors/client-error'
-import { expenseTransactions } from '../../../utils/expense-transactions'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
+import z from 'zod'
 
-export async function getExpenseTransactions(app: FastifyInstance) {
+export async function getTeam(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().get(
-    '/team/:teamId/transactions/expense',
+    '/team/:teamId',
     {
       schema: {
         params: z.object({
           teamId: z.string().cuid()
-        }),
+        })
       },
       preHandler: (request, reply, done) => {
         isAuthenticated({ request, reply, done })
@@ -28,14 +27,11 @@ export async function getExpenseTransactions(app: FastifyInstance) {
         }
       })
 
-      if (!team) throw new ClientError('Team not found.')
-
-      const { transactions, diffFromLastMonth } = await expenseTransactions(teamId)
-
-      return {
-        transactions,
-        diffFromLastMonth
+      if (!team) {
+        throw new ClientError('Team not found.')
       }
+
+      return team
     }
   )
 }

@@ -2,48 +2,50 @@ import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
 import { db } from '../../../lib/db'
 import { z } from 'zod'
-import { decodeToken } from '../../../utils/decode-token'
-
-const deleteTransactionSchema = z.object({
-  id: z.string().cuid(),
-})
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { ClientError } from '../../errors/client-error'
 
 export async function deleteTransaction(app: FastifyInstance) {
-  app.delete('/transactions/:id', {
-    preHandler: (request, reply, done) => {
-      isAuthenticated({ request, reply, done })
-    }
-  }, async (request, reply) => {
-    try {
-      const { id } = deleteTransactionSchema.parse(request.params)
+  app.withTypeProvider<ZodTypeProvider>().delete(
+    '/team/:teamId/transactions/:transactionId',
+    {
+      schema: {
+        params: z.object({
+          teamId: z.string().cuid(),
+          transactionId: z.string().cuid()
+        }),
+      },
+      preHandler: (request, reply, done) => {
+        isAuthenticated({ request, reply, done })
+      }
+    },
+    async (request) => {
+      const { teamId, transactionId } = request.params
 
-      const { id: userId, team } = await decodeToken(request, reply)
-
-      const verifyTransaction = await db.transaction.findUnique({
+      const team = await db.team.findUnique({
         where: {
-          id,
-          createdById: userId,
-          teamId: team!.id
+          id: teamId
         }
       })
 
-      if (!verifyTransaction) {
-        return reply.status(404).send({ message: 'Transaction not found.' })
-      }
+      if (!team) throw new ClientError('Team not found.')
 
+      const transaction = await db.transaction.findUnique({
+        where: {
+          id: transactionId
+        }
+      })
+
+      if (!transaction) throw new ClientError('Transaction not found.')
+      
       await db.transaction.delete({
         where: {
-          id,
-          createdById: userId,
-          teamId: team!.id
+          team_id: teamId,
+          id: transactionId
         }
       })
 
-      return reply.status(200).send({ message: 'Transaction successfully deleted.' })
-    } catch (err) {
-      return reply.status(500).send({
-        message: 'Internal server error.'
-      })
+      return 'Transaction successfully deleted.'
     }
-  })
+  )
 }

@@ -1,53 +1,50 @@
 import { FastifyInstance } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { db } from '../../../lib/db'
 import { z } from 'zod'
-import { hashPassword } from '../../../utils/hashPassword'
-
-const signUpSchema = z.object({
-  id: z.string().cuid().optional(),
-  name: z.string(),
-  email: z.string().email(),
-  password: z.string().min(8),
-  phone: z.string()
-})
+import { ClientError } from '../../errors/client-error'
+import bcrypt from 'bcrypt'
 
 export async function signUp(app: FastifyInstance) {
-  app.post('/sign-up', async (request, reply) => {
-    try {
-      const { name, email, password, phone } = signUpSchema.parse(request.body)
+  app.withTypeProvider<ZodTypeProvider>().post(
+    '/sign-up',
+    {
+      schema: {
+        body: z.object({
+          name: z.string().min(3),
+          email: z.string().email(),
+          password: z.string().min(8),
+        })
+      }
+    },
+    async (request, reply) => {
+      const { name, email, password } = request.body
 
-      const userExist = await db.user.findUnique({
+      const memberExist = await db.member.findUnique({
         where: {
           email
         }
       })
 
-      if (!userExist) {
-        const hashedPassword = hashPassword(password)
+      if (memberExist) throw new ClientError('Email already in use.')
 
-        const newUser = await db.user.create({
-          data: {
-            name, email, password: hashedPassword, phone
+      const hashPassword = bcrypt.hashSync(password, 10)
+
+      await db.team.create({
+        data: {
+          name: `Equipe do ${name.split(' ')[0]}`,
+          users: {
+            create: {
+              name,
+              email,
+              password: hashPassword,
+              is_owner: true
+            }
           }
-        })
-
-        await db.team.create({
-          data: {
-            name: `Equipe do ${newUser.name.split(' ')[0]}`,
-            managerId: newUser.id
-          }
-        })
-
-        return reply.status(201).send({ message: "User registered successfully." })
-      }
-
-      return reply.status(409).send({
-        message: 'Email already in use.'
+        }
       })
-    } catch (err) {
-      return reply.status(500).send({
-        message: 'Internal server error.'
-      })
+
+      return reply.status(201).send('User registered successfully.')
     }
-  })
+  )
 }

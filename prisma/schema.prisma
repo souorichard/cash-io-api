@@ -13,18 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       String @id @default(cuid())
-  name     String
-  email    String @unique
+model Member {
+  id       String  @id @default(cuid())
+  name     String?
+  email    String  @unique
   password String
-  phone    String
+  is_owner Boolean @default(false)
 
-  team         Team?         @relation("OwnerTeam")
+  team    Team   @relation("MembersTeam", fields: [team_id], references: [id])
+  team_id String
+
   transactions Transaction[] @relation("OwnerTransaction")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("members")
 }
 
 model Team {
@@ -32,28 +35,28 @@ model Team {
   name        String
   description String?
 
-  manager   User   @relation("OwnerTeam", fields: [managerId], references: [id], onDelete: Cascade)
-  managerId String @unique
-
+  members      Member[]      @relation("MembersTeam")
   transactions Transaction[] @relation("TeamTransactions")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("teams")
 }
 
 model Transaction {
-  id            String @id @default(cuid())
-  description   String
-  category      String
-  type          String
-  amountInCents Int
+  id              String @id @default(cuid())
+  description     String
+  category        String
+  type            String
+  amount_in_cents Int
 
-  createdBy   User   @relation("OwnerTransaction", fields: [createdById], references: [id], onDelete: Cascade)
-  createdById String
+  created_by    Member @relation("OwnerTransaction", fields: [created_by_id], references: [id], onDelete: Cascade)
+  created_by_id String
 
-  team   Team   @relation("TeamTransactions", fields: [teamId], references: [id], onDelete: Cascade)
-  teamId String
+  team    Team   @relation("TeamTransactions", fields: [team_id], references: [id], onDelete: Cascade)
+  team_id String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("transactions")
 }
