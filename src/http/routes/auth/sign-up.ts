@@ -33,7 +33,7 @@ export async function signUp(app: FastifyInstance) {
       await db.team.create({
         data: {
           name: `Equipe do ${name.split(' ')[0]}`,
-          users: {
+          members: {
             create: {
               name,
               email,
