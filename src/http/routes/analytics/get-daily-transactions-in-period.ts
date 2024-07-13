@@ -68,15 +68,15 @@ export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
         if (!acc[date]) {
           acc[date] = 0
         }
-        acc[date] += transactions.amount_in_cents
+        acc[date] += transactions.amount_in_cents / 100
         return acc
       }, {} as Record<string, number>)
 
       const filteredTransactions = Object.entries(transactionsPerDay)
-        .filter(([, amountInCents]) => amountInCents >= 1)
-        .map(([date, amountInCents]) => ({
+        .filter(([, amount]) => amount >= 1)
+        .map(([date, amount]) => ({
           date,
-          amountInCents,
+          amount,
         }))
 
       const orderedTransactionsPerDay = filteredTransactions.sort((a, b) => {
