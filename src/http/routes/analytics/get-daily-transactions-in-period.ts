@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify'
 import { isAuthenticated } from '../../authentication'
 import { db } from '../../../lib/db'
 import { z } from 'zod'
-import { decodeToken } from '../../../utils/decode-token'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { ClientError } from '../../errors/client-error'
 import dayjs from 'dayjs'
@@ -28,8 +27,6 @@ export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
       const { teamId } = request.params
       const { from, to } = request.query
 
-      const { id } = await decodeToken(request, reply)
-
       const team = await db.team.findUnique({
         where: {
           id: teamId
@@ -51,11 +48,11 @@ export async function getDailyTransactionsInPeriod(app: FastifyInstance) {
           created_at: true
         },
         where: {
+          type: 'REVENUE',
           created_at: {
             gte: startDate.startOf('day').toDate(),
             lte: endDate.endOf('day').toDate()
           },
-          created_by_id: id,
           team_id: teamId,
         },
         orderBy: {

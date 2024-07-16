@@ -45,5 +45,7 @@ export async function isAuthenticated({ request, reply, done }: AuthenticateType
     return reply.status(404).send({ message: 'Unauthorized! Invalid token' })
   }
 
+  request.user = user
+
   done()
 }

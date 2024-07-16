@@ -26,7 +26,11 @@ export async function getMembers(app: FastifyInstance) {
           id: teamId
         },
         include: {
-          members: true
+          members: {
+            where: {
+              is_confirmed: true
+            }
+          }
         }
       })
 

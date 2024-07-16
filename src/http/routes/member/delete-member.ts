@@ -19,10 +19,9 @@ export async function deleteMember(app: FastifyInstance) {
         isAuthenticated({ request, reply, done })
       }
     },
-    async (request, reply) => {
+    async (request) => {
       const { memberId } = request.params
-
-      const { id } = await decodeToken(request, reply)
+      const { id } = request.user
 
       const verifyMember = await db.member.findUnique({
         where: {

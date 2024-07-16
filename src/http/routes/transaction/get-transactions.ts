@@ -47,14 +47,21 @@ export async function getTransactions(app: FastifyInstance) {
           },
           category
         },
-        select: {
-          id: true,
-          description: true,
-          category: true,
-          amount_in_cents: true,
-          type: true,
-          created_at: true,
+        include: {
+          created_by: {
+            select: {
+              name: true
+            }
+          }
         },
+        // select: {
+        //   id: true,
+        //   description: true,
+        //   category: true,
+        //   amount_in_cents: true,
+        //   type: true,
+        //   created_at: true,
+        // },
         skip: page ? (Number(page) - 1) * 10 : 0,
         take: limit ? Number(limit) : 10,
         orderBy: {
@@ -63,11 +70,8 @@ export async function getTransactions(app: FastifyInstance) {
       })
 
       const transactions = rawTransactions.map((transaction) => {
-        const formattedCreatedAt = dayjs(transaction.created_at).format('DD/MM/YYYY')
-
         return {
-          ...transaction,
-          created_at: formattedCreatedAt
+          ...transaction
         }
       })
 
