@@ -12,6 +12,9 @@ export async function getMembers(app: FastifyInstance) {
       schema: {
         params: z.object({
           teamId: z.string().cuid()
+        }),
+        querystring: z.object({
+          page: z.string().optional()
         })
       },
       preHandler: (request, reply, done) => {
@@ -20,17 +23,11 @@ export async function getMembers(app: FastifyInstance) {
     },
     async (request) => {
       const { teamId } = request.params
+      const { page } = request.query
 
       const team = await db.team.findUnique({
         where: {
           id: teamId
-        },
-        include: {
-          members: {
-            where: {
-              is_confirmed: true
-            }
-          }
         }
       })
 
@@ -38,7 +35,29 @@ export async function getMembers(app: FastifyInstance) {
         throw new ClientError('Team not found.')
       }
 
-      return team.members
+      const members = await db.member.findMany({
+        where: {
+          team_id: teamId,
+          is_confirmed: true
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          is_owner: true
+        },
+        skip: page ? (Number(page) - 1) * 3 : 0,
+        take: 3
+      })
+
+      return {
+        members,
+        meta: {
+          total: members.length,
+          page: page ? Number(page) : 0,
+          perPage: 3
+        }
+      }
     }
   )
 }

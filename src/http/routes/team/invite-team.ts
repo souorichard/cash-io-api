@@ -31,6 +31,13 @@ export async function inviteTeam(app: FastifyInstance) {
       const team = await db.team.findUnique({
         where: {
           id: teamId
+        },
+        include: {
+          members: {
+            where: {
+              is_owner: true
+            }
+          }
         }
       })
 
@@ -48,7 +55,9 @@ export async function inviteTeam(app: FastifyInstance) {
         throw new ClientError('Email already in use.')
       }
 
-      const hashAleatoryPassword = bcrypt.hashSync(Math.random().toString(), 10)
+      const randomPassword = Math.random().toString(10).slice(-8)
+
+      const hashAleatoryPassword = bcrypt.hashSync(randomPassword, 10)
 
       const member = await db.member.create({
         data: {
@@ -60,6 +69,12 @@ export async function inviteTeam(app: FastifyInstance) {
 
       const mail = await getMailClient()
 
+      const owner = team.members.map((owner) => {
+        const name = owner.name?.split(' ')[0]
+
+        return name
+      })
+
       const confirmLink = `${process.env.API_BASE_URL}/members/${member.id}/confirm`
 
       const message = await mail.sendMail({
@@ -68,13 +83,16 @@ export async function inviteTeam(app: FastifyInstance) {
           address: 'no-reply@cash-io.com',
         },
         to: email,
-        subject: `Voce foi convidado para o entrar no time `,
+        subject: `Voce foi convidado para o entrar no time do ${owner}`,
         html: `
           <div style="font-family: Arial, sans-serif; text-align: center; line-height: 1.6">
             <div style="max-width: 460px; margin: 0 auto; padding: 20px">
               <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 8px">Bem-vindo ao Cash.io!</h1>
               <p style="color: rgb(113 113 122); font-size: 16px; margin-bottom: 24px">
                 Você foi convidado(a) para participar de um time. Para confirmar sua participação, clique no link abaixo: 
+              </p>
+              <p style="font-size: 16px; margin-bottom: 24px">
+                <span style="font-weight: 600">Senha:</span> ${randomPassword}
               </p>
               <a
                 href="${confirmLink}"

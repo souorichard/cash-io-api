@@ -28,7 +28,7 @@ export async function confirmMember(app: FastifyInstance) {
       }
 
       if (member.is_confirmed) {
-        return reply.redirect(`${process.env.WEB_BASE_URL}/app`)
+        return reply.redirect(`${process.env.WEB_BASE_URL}/auth/sign-in?email=${member.email}`)
       }
 
       await db.member.update({
@@ -40,7 +40,7 @@ export async function confirmMember(app: FastifyInstance) {
         }
       })
 
-      return reply.redirect(`${process.env.WEB_BASE_URL}/app`)
+      return reply.redirect(`${process.env.WEB_BASE_URL}/auth/sign-in?email=${member.email}`)
     }
   )
 }
