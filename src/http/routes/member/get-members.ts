@@ -14,7 +14,7 @@ export async function getMembers(app: FastifyInstance) {
           teamId: z.string().cuid()
         }),
         querystring: z.object({
-          page: z.number()
+          page: z.coerce.number()
         })
       },
       preHandler: (request, reply, done) => {
