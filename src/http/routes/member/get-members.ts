@@ -14,7 +14,7 @@ export async function getMembers(app: FastifyInstance) {
           teamId: z.string().cuid()
         }),
         querystring: z.object({
-          page: z.string().optional()
+          page: z.number()
         })
       },
       preHandler: (request, reply, done) => {
@@ -46,15 +46,22 @@ export async function getMembers(app: FastifyInstance) {
           email: true,
           is_owner: true
         },
-        skip: page ? (Number(page) - 1) * 3 : 0,
+        skip: page * 3,
         take: 3
+      })
+
+      const totalCount = await db.member.count({
+        where: {
+          team_id: teamId,
+          is_confirmed: true
+        }
       })
 
       return {
         members,
         meta: {
-          total: members.length,
-          page: page ? Number(page) : 0,
+          total: totalCount,
+          page,
           perPage: 3
         }
       }

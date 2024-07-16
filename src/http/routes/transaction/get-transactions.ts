@@ -4,7 +4,6 @@ import { db } from '../../../lib/db'
 import { z } from 'zod'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { ClientError } from '../../errors/client-error'
-import dayjs from 'dayjs'
 
 export async function getTransactions(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().get(
@@ -17,8 +16,7 @@ export async function getTransactions(app: FastifyInstance) {
         querystring: z.object({
           description: z.string().optional(),
           category: z.string().optional(),
-          page: z.string().optional(),
-          limit: z.string().optional(),
+          page: z.coerce.number(),
           sortDate: z.string().optional()
         })
       },
@@ -28,7 +26,7 @@ export async function getTransactions(app: FastifyInstance) {
     },
     async (request) => {
       const { teamId } = request.params
-      const { description, category, page, limit, sortDate } = request.query
+      const { description, category, page, sortDate } = request.query
 
       const team = await db.team.findUnique({
         where: {
@@ -38,7 +36,7 @@ export async function getTransactions(app: FastifyInstance) {
 
       if (!team) throw new ClientError('Team not found.')
 
-      const rawTransactions = await db.transaction.findMany({
+      const transactions = await db.transaction.findMany({
         where: {
           team_id: teamId,
           description: {
@@ -54,33 +52,25 @@ export async function getTransactions(app: FastifyInstance) {
             }
           }
         },
-        // select: {
-        //   id: true,
-        //   description: true,
-        //   category: true,
-        //   amount_in_cents: true,
-        //   type: true,
-        //   created_at: true,
-        // },
-        skip: page ? (Number(page) - 1) * 10 : 0,
-        take: limit ? Number(limit) : 10,
+        skip: page * 10,
+        take: 10,
         orderBy: {
           created_at: sortDate === 'asc' ? 'asc' : 'desc'
         }
       })
 
-      const transactions = rawTransactions.map((transaction) => {
-        return {
-          ...transaction
+      const totalCount = await db.transaction.count({
+        where: {
+          team_id: teamId
         }
       })
 
       return {
         transactions,
         meta: {
-          total: transactions.length,
-          page: page ? Number(page) : 0,
-          perPage: limit ? Number(limit) : 10
+          total: totalCount,
+          page,
+          perPage: 10
         }
       }
     }
