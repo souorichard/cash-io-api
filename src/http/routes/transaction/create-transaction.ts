@@ -39,13 +39,13 @@ export async function createTransaction(app: FastifyInstance) {
 
       if (!team) throw new ClientError('Team not found.')
 
-      const amountInReal = Math.round(amount * 100)
+      // const amountInReal = Math.round(amount * 100)
       
       const transaction = await db.transaction.create({
         data: {
           description,
           category,
-          amount_in_cents: amountInReal,
+          amount_in_cents: amount,
           type,
           created_by_id: id,
           team_id: team.id
